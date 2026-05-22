@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}{% if !query.is_empty() %}{{ query }} — Search — {% endif %}Murmur{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+  <div class="app-layout__content">
+    {% if query.is_empty() %}
+      <div class="search-hero">
+        <h1 class="search-hero__title">Murmur</h1>
+        <p class="search-hero__subtitle">Browse Reddit privately. No tracking. No ads. No data collection.</p>
+        <form action="/search" method="GET" class="search-hero__form">
+          <input
+            type="search"
+            name="q"
+            class="search-hero__input"
+            placeholder="Search Reddit..."
+            aria-label="Search Reddit"
+            autofocus
+          >
+        </form>
+      </div>
+    {% else %}
+      <div style="margin-bottom: var(--space-6);">
+        <h1 style="font-size: var(--text-2xl); margin-bottom: var(--space-2);">
+          Search results for "{{ query }}"
+        </h1>
+        <div class="sort-toolbar" role="tablist" aria-label="Search type">
+          {% if search_type == "posts" %}
+            <a href="/search?q={{ query | urlencode }}&type=posts" class="sort-btn sort-btn--active">Posts</a>
+            <a href="/search?q={{ query | urlencode }}&type=subreddits" class="sort-btn">Subreddits</a>
+          {% else %}
+            <a href="/search?q={{ query | urlencode }}&type=posts" class="sort-btn">Posts</a>
+            <a href="/search?q={{ query | urlencode }}&type=subreddits" class="sort-btn sort-btn--active">Subreddits</a>
+          {% endif %}
+        </div>
+      </div>
+
+      {% match results %}
+        {% when Some with (listing) %}
+          <div class="feed feed--card" id="search-results">
+            {% for post in listing.posts %}
+              {% include "components/post_card.html" %}
+            {% endfor %}
+
+            {% if listing.posts.is_empty() %}
+              <div class="empty-state">
+                <div class="empty-state__icon">🔍</div>
+                <h2 class="empty-state__title">No results found</h2>
+                <p class="empty-state__desc">Try different keywords or check your spelling.</p>
+              </div>
+            {% endif %}
+          </div>
+
+          {% if listing.after.is_some() %}
+            <div class="infinite-scroll-trigger" data-after="{{ listing.after.unwrap() }}" data-query="{{ query }}" data-type="{{ search_type }}"></div>
+          {% endif %}
+        {% when None %}
+          <div class="empty-state">
+            <div class="empty-state__icon">🔍</div>
+            <h2 class="empty-state__title">No results found</h2>
+            <p class="empty-state__desc">Try different keywords or check your spelling.</p>
+          </div>
+      {% endmatch %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/infinite-scroll.js" defer></script>
+{% endblock %}

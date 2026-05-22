@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }} — r/{{ post.subreddit }} — Murmur{% endblock %}
+{% block description %}{{ post.selftext.as_deref().unwrap_or("") }}{% endblock %}
+
+{% block content %}
+<div class="app-layout app-layout--with-sidebar">
+  <div class="app-layout__content">
+    <!-- Post Detail -->
+    <article class="post-card" id="post-{{ post.id }}" data-fullname="{{ post.fullname }}" style="margin-bottom: var(--space-4);">
+      <div class="post-card__votes">
+        <button class="vote-btn vote-btn--up{% if post.likes == true %} active{% endif %}" data-vote="up" data-fullname="{{ post.fullname }}" aria-label="Upvote">▲</button>
+        <span class="vote-score{% if post.likes == true %} vote-score--upvoted{% elseif post.likes == false %} vote-score--downvoted{% endif %}" data-score="{{ post.score }}">{{ post.score }}</span>
+        <button class="vote-btn vote-btn--down{% if post.likes == false %} active{% endif %}" data-vote="down" data-fullname="{{ post.fullname }}" aria-label="Downvote">▼</button>
+      </div>
+
+      <div class="post-card__content">
+        <div class="post-card__header">
+          <a href="/r/{{ post.subreddit }}" class="post-card__subreddit">r/{{ post.subreddit }}</a>
+          <span class="post-card__meta-sep" aria-hidden="true">·</span>
+          <span class="post-card__meta">
+            Posted by <a href="/u/{{ post.author }}" class="post-card__author">u/{{ post.author }}</a>
+            <span class="post-card__meta-sep" aria-hidden="true">·</span>
+            <time datetime="{{ post.created_utc | timestamp_to_iso }}">{{ post.created_utc | relative_time }}</time>
+          </span>
+          {% if post.stickied %}<span class="flair flair--mod">Pinned</span>{% endif %}
+          {% if post.nsfw or post.over_18 %}<span class="flair flair--nsfw">NSFW</span>{% endif %}
+          {% if post.locked %}<span class="flair">🔒 Locked</span>{% endif %}
+          {% if post.archived %}<span class="flair">📦 Archived</span>{% endif %}
+        </div>
+
+        <h1 class="post-card__title" style="font-size: var(--text-2xl);">{{ post.title }}</h1>
+
+        <!-- Media Viewer -->
+        {% if post.is_video && post.media.is_some() %}
+          <div class="media-viewer">
+            <video controls preload="metadata" poster="{% if post.media.as_ref().unwrap().fallback_url.is_some() %}/media/{{ post.media.as_ref().unwrap().fallback_url.as_ref().unwrap() | encode_media_url }}{% endif %}">
+              <source src="/media/{{ post.media.as_ref().unwrap().url | encode_media_url }}" type="video/mp4">
+            </video>
+          </div>
+        {% elif post.is_gallery && post.gallery.is_some() %}
+          <!-- Gallery display — simple first image for now -->
+          <div class="media-viewer">
+            <img src="/media/{{ post.gallery.as_ref().unwrap().first().unwrap().url | encode_media_url }}" alt="" loading="lazy">
+          </div>
+        {% elif post.url.is_some() && !post.is_self %}
+          <div class="media-viewer">
+            <img src="/media/{{ post.url.as_ref().unwrap() | encode_media_url }}" alt="" loading="lazy">
+          </div>
+        {% endif %}
+
+        <!-- Self Text -->
+        {% if post.selftext_html.is_some() %}
+          <div class="post-card__body" style="max-height: none; font-size: var(--text-base);">
+            {{ post.selftext_html.as_ref().unwrap() | safe }}
+          </div>
+        {% endif %}
+
+        <div class="post-card__footer">
+          <span>💬 {{ post.num_comments }} comments</span>
+          {% if !post.archived %}
+            <button class="post-card__action" data-action="save" data-fullname="{{ post.fullname }}">
+              {% if post.saved %}Unsave{% else %}Save{% endif %}
+            </button>
+          {% endif %}
+          <span class="post-card__meta">{{ post.domain.as_deref().unwrap_or("self.murmur") }}</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- Comment Sort -->
+    <div class="sort-toolbar" role="tablist" aria-label="Sort comments">
+      {% for s in ["top", "new", "old", "controversial", "best"] %}
+        {% if comment_sort == s %}
+          <a href="/r/{{ post.subreddit }}/comments/{{ post.id }}?sort={{ s }}" class="sort-btn sort-btn--active" role="tab" aria-selected="true">{{ s }}</a>
+        {% else %}
+          <a href="/r/{{ post.subreddit }}/comments/{{ post.id }}?sort={{ s }}" class="sort-btn" role="tab">{{ s }}</a>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <!-- Comment Form -->
+    {% if !post.archived %}
+      <div style="margin-bottom: var(--space-6);">
+        <form action="/api/comment" method="POST" class="comment-form" data-post="{{ post.fullname }}">
+          <textarea
+            class="form-textarea"
+            name="text"
+            placeholder="What are your thoughts?"
+            aria-label="Write a comment"
+            rows="4"
+            style="margin-bottom: var(--space-3);"
+          ></textarea>
+          <button type="submit" class="btn btn--primary">Comment</button>
+        </form>
+      </div>
+    {% endif %}
+
+    <!-- Comments -->
+    <div id="comments">
+      {% if comments.is_empty() %}
+        <div class="empty-state">
+          <div class="empty-state__icon">💭</div>
+          <h2 class="empty-state__title">No comments yet</h2>
+          <p class="empty-state__desc">Be the first to share your thoughts.</p>
+        </div>
+      {% else %}
+        {% include "partials/comment_thread.html" %}
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="app-layout__sidebar" role="complementary" aria-label="Post sidebar">
+    {% include "components/subreddit_sidebar.html" %}
+  </aside>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/comments.js" defer></script>
+<script src="/static/js/voting.js" defer></script>
+{% endblock %}

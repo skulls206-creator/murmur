@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="system">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark light">
+
+  <title>{% block title %}Murmur{% endblock %}</title>
+  <meta name="description" content="{% block description %}Browse Reddit privately. No tracking, no ads, no data collection.{% endblock %}">
+
+  <!-- CSP is handled server-side via middleware -->
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="/static/css/design-system.css">
+
+  {% block extra_head %}{% endblock %}
+
+  <!-- Preconnect to font service and preload critical assets -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Theme script (runs before render to prevent flash) -->
+  <script>
+    (function() {
+      const saved = localStorage.getItem('murmur-theme');
+      const theme = saved || 'system';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+
+  {% block meta %}{% endblock %}
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="nav" role="navigation" aria-label="Main navigation">
+    <div class="nav__inner">
+      <a href="/" class="nav__logo" aria-label="Murmur home">
+        <span class="nav__logo-icon">M</span>
+        <span>Murmur</span>
+      </a>
+
+      <div class="nav__search" role="search">
+        <form action="/search" method="GET">
+          <span class="nav__search-icon" aria-hidden="true">🔍</span>
+          <input
+            type="search"
+            name="q"
+            class="nav__search-input"
+            placeholder="Search posts, subreddits, users..."
+            aria-label="Search Murmur"
+            autocomplete="off"
+          >
+        </form>
+      </div>
+
+      <div class="nav__actions">
+        {% match user %}
+          {% when Some with (session) %}
+            <div class="nav__user-menu" role="button" tabindex="0" aria-haspopup="true">
+              <div class="nav__avatar" aria-hidden="true">
+                {{ session.username.chars().next().unwrap_or('?') }}
+              </div>
+              <span class="text-small" style="display: none;">{{ session.username }}</span>
+            </div>
+          {% when None %}
+            <a href="/auth/start" class="nav__btn nav__btn--primary">
+              Sign in with Reddit
+            </a>
+        {% endmatch %}
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main role="main">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Load progressive enhancement JS -->
+  <script src="/static/js/theme.js" defer></script>
+  <script src="/static/js/main.js" defer></script>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

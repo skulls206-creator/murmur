@@ -1,0 +1,9 @@
+# Murmur — Privacy-First Reddit Frontend
+# All content is proxied. No tracking. No data collection.
+
+User-agent: *
+Disallow: /api/
+Disallow: /auth/
+
+# Allow everything else — content is public Reddit data
+Allow: /

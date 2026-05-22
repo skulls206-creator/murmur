@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In — Murmur{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-card__icon">M</div>
+    <h1>Welcome to Murmur</h1>
+    <p>Sign in with your Reddit account to vote, comment, post, and access your personalized feed — all without tracking.</p>
+    <a href="/auth/start?redirect={{ redirect_to.as_deref().unwrap_or("/") | urlencode }}" class="btn btn--primary btn--lg" style="width: 100%;">
+      Continue with Reddit
+    </a>
+    <p style="margin-top: var(--space-4); font-size: var(--text-xs); color: var(--color-text-dim);">
+      Your credentials never touch Murmur. All authentication happens directly with Reddit's OAuth.
+    </p>
+  </div>
+</div>
+{% endblock %}

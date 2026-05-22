@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}r/{{ subreddit.name }} — Murmur{% endblock %}
+
+{% block content %}
+<div class="app-layout app-layout--with-sidebar">
+  <div class="app-layout__content">
+    <!-- Subreddit Header -->
+    <div class="subreddit-header">
+      <div class="subreddit-header__icon">
+        {% if subreddit.icon_img.is_some() %}
+          <img src="/media/{{ subreddit.icon_img.as_ref().unwrap() | encode_media_url }}" alt="" loading="lazy">
+        {% endif %}
+      </div>
+      <div class="subreddit-header__info">
+        <h1>r/{{ subreddit.name }}</h1>
+        {% if subreddit.title.is_some() %}
+          <p>{{ subreddit.title.as_ref().unwrap() }}</p>
+        {% endif %}
+        <div class="subreddit-header__stats">
+          <span class="subreddit-header__stat">📊 {{ subreddit.subscribers }} subscribers</span>
+          {% if subreddit.active_user_count.is_some() %}
+            <span class="subreddit-header__stat">🟢 {{ subreddit.active_user_count.unwrap() }} online</span>
+          {% endif %}
+          {% if subreddit.over_18 %}
+            <span class="flair flair--nsfw">NSFW</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Sort Toolbar -->
+    <div class="sort-toolbar" role="tablist" aria-label="Sort posts">
+      {% for s in ["hot", "new", "top", "rising", "controversial"] %}
+        {% if sort.as_str() == s %}
+          <a href="/r/{{ subreddit.name }}?sort={{ s }}" class="sort-btn sort-btn--active" role="tab" aria-selected="true">{{ s }}</a>
+        {% else %}
+          <a href="/r/{{ subreddit.name }}?sort={{ s }}" class="sort-btn" role="tab">{{ s }}</a>
+        {% endif %}
+      {% endfor %}
+
+      <div class="view-toggle" role="radiogroup" aria-label="Feed view">
+        {% for v in ["card", "compact", "classic"] %}
+          {% if view.as_str() == v %}
+            <a href="/r/{{ subreddit.name }}?sort={{ sort.as_str() }}&view={{ v }}" class="view-toggle__btn view-toggle__btn--active" role="radio" aria-checked="true">{{ v|first|upper }}</a>
+          {% else %}
+            <a href="/r/{{ subreddit.name }}?sort={{ sort.as_str() }}&view={{ v }}" class="view-toggle__btn" role="radio">{{ v|first|upper }}</a>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Feed -->
+    <div class="feed feed--{{ view.as_str() }}" id="feed">
+      {% for post in posts.posts %}
+        {% include "components/post_card.html" %}
+      {% endfor %}
+
+      {% if posts.posts.is_empty() %}
+        <div class="empty-state">
+          <div class="empty-state__icon">🪸</div>
+          <h2 class="empty-state__title">This subreddit is quiet</h2>
+          <p class="empty-state__desc">No posts match the current filter. Try changing the sort mode.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    {% if posts.after.is_some() %}
+      <div class="infinite-scroll-trigger" data-after="{{ posts.after.unwrap() }}" data-subreddit="{{ subreddit.name }}" data-sort="{{ sort.as_str() }}" data-view="{{ view.as_str() }}"></div>
+    {% endif %}
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="app-layout__sidebar">
+    {% include "components/subreddit_sidebar.html" %}
+  </aside>
+
+  <!-- Mobile sidebar toggle -->
+  <button class="sidebar-toggle" aria-label="Toggle sidebar" hidden>
+    ☰
+  </button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/infinite-scroll.js" defer></script>
+{% endblock %}

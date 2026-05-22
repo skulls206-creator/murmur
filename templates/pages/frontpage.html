@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Murmur — Private Reddit Frontend{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+  <div class="app-layout__content">
+    <!-- Sort Toolbar -->
+    <div class="sort-toolbar" role="tablist" aria-label="Sort posts">
+      {% for s in ["hot", "new", "top", "rising", "controversial"] %}
+        {% if sort.as_str() == s %}
+          <a href="/?sort={{ s }}" class="sort-btn sort-btn--active" role="tab" aria-selected="true">{{ s }}</a>
+        {% else %}
+          <a href="/?sort={{ s }}" class="sort-btn" role="tab">{{ s }}</a>
+        {% endif %}
+      {% endfor %}
+
+      <!-- View Toggle -->
+      <div class="view-toggle" role="radiogroup" aria-label="Feed view">
+        {% for v in ["card", "compact", "classic"] %}
+          {% if view.as_str() == v %}
+            <a href="/?sort={{ sort.as_str() }}&view={{ v }}" class="view-toggle__btn view-toggle__btn--active" role="radio" aria-checked="true" title="{{ v }} view">
+              {{ v|first|upper }}
+            </a>
+          {% else %}
+            <a href="/?sort={{ sort.as_str() }}&view={{ v }}" class="view-toggle__btn" role="radio" title="{{ v }} view">
+              {{ v|first|upper }}
+            </a>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Feed -->
+    <div class="feed feed--{{ view.as_str() }}" id="feed">
+      {% for post in posts.posts %}
+        {% include "components/post_card.html" %}
+      {% endfor %}
+
+      {% if posts.posts.is_empty() %}
+        <div class="empty-state">
+          <div class="empty-state__icon">🌊</div>
+          <h2 class="empty-state__title">Nothing here yet</h2>
+          <p class="empty-state__desc">Try changing the sort mode or check back later.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Pagination -->
+    {% if posts.after.is_some() %}
+      <div class="infinite-scroll-trigger" data-after="{{ posts.after.unwrap() }}" data-sort="{{ sort.as_str() }}" data-view="{{ view.as_str() }}"></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/infinite-scroll.js" defer></script>
+{% endblock %}

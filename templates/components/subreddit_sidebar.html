@@ -1,0 +1,66 @@
+<div class="sidebar" role="complementary" aria-label="Subreddit sidebar">
+  <!-- About -->
+  <div class="sidebar__section">
+    <div class="sidebar__section-header">
+      <div class="sidebar__subreddit-icon">
+        {% if subreddit.icon_img.is_some() %}
+          <img src="/media/{{ subreddit.icon_img.as_ref().unwrap() | encode_media_url }}" alt="" loading="lazy">
+        {% endif %}
+      </div>
+      <div>
+        <div class="sidebar__sub-title">r/{{ subreddit.name }}</div>
+        <div class="sidebar__sub-stats">
+          <span class="sidebar__stat">📊 {{ subreddit.subscribers }}</span>
+          <span class="sidebar__stat">🟢 {{ subreddit.active_user_count.unwrap_or(0) }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar__section-body">
+      {% if subreddit.public_description.is_some() %}
+        <p>{{ subreddit.public_description.as_ref().unwrap() }}</p>
+      {% else %}
+        <p>No description</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Create Post -->
+  <div class="sidebar__section">
+    <div class="sidebar__section-body">
+      <a href="/submit?subreddit={{ subreddit.name }}" class="sidebar__btn sidebar__btn--primary">
+        ✏️ Create Post
+      </a>
+    </div>
+  </div>
+
+  <!-- Rules -->
+  {% if !subreddit.rules.is_empty() %}
+    <div class="sidebar__section">
+      <div class="sidebar__section-header">📋 Rules</div>
+      <div class="sidebar__section-body" style="padding: 0;">
+        {% for rule in subreddit.rules.iter().take(10) %}
+          <div class="sidebar__rule">
+            <div class="sidebar__rule-name">{{ loop.index }}. {{ rule.short_name }}</div>
+            {% if !rule.description.is_empty() %}
+              <div class="sidebar__rule-desc">{{ rule.description }}</div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Moderators -->
+  {% if subreddit.moderators.is_some() && !subreddit.moderators.as_ref().unwrap().is_empty() %}
+    <div class="sidebar__section">
+      <div class="sidebar__section-header">🛡️ Moderators</div>
+      <div class="sidebar__section-body">
+        {% for mod in subreddit.moderators.as_ref().unwrap().iter().take(15) %}
+          <a href="/u/{{ mod.name }}" style="display: block; padding: 2px 0; font-size: var(--text-sm);">
+            u/{{ mod.name }}
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+</div>

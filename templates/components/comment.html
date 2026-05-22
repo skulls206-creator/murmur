@@ -1,0 +1,64 @@
+<div class="comment comment--depth-{{ comment.depth.min(7) }}" id="comment-{{ comment.id }}" data-fullname="{{ comment.fullname }}">
+  <div class="comment__header">
+    <button class="comment__collapse-btn" aria-label="Toggle comment visibility" onclick="toggleComment(this)">
+      [–]
+    </button>
+    <a href="/u/{{ comment.author }}" class="comment__author{% if comment.is_submitter %} comment__author--op{% endif %}">
+      u/{{ comment.author }}
+    </a>
+    {% if comment.author_flair_text.is_some() %}
+      <span class="flair" {% if comment.author_flair_background_color.is_some() %}style="background-color: {{ comment.author_flair_background_color.as_ref().unwrap() }}20; color: {{ comment.author_flair_background_color.as_ref().unwrap() }}"{% endif %}>
+        {{ comment.author_flair_text.as_ref().unwrap() }}
+      </span>
+    {% endif %}
+    {% if comment.distinguished.is_some() && comment.distinguished.as_ref().unwrap() == "moderator" %}
+      <span class="flair flair--mod">MOD</span>
+    {% endif %}
+    <span class="comment__time">{{ comment.created_utc | relative_time }}</span>
+    <span class="comment__score">{{ comment.score }}</span>
+    {% if comment.edited %}<span class="comment__time">· edited</span>{% endif %}
+    {% if comment.stickied %}<span class="flair flair--mod">Pinned</span>{% endif %}
+  </div>
+
+  <div class="comment__body">
+    {% if comment.body_html.is_some() %}
+      {{ comment.body_html.as_ref().unwrap() | safe }}
+    {% else %}
+      <p>{{ comment.body }}</p>
+    {% endif %}
+  </div>
+
+  <div class="comment__actions">
+    <button class="comment__action vote-btn vote-btn--up{% if comment.likes == true %} active{% endif %}" data-vote="up" data-fullname="{{ comment.fullname }}" aria-label="Upvote">
+      ▲ {{ comment.likes == true ? "Upvoted" : "Upvote" }}
+    </button>
+    <button class="comment__action vote-btn vote-btn--down{% if comment.likes == false %} active{% endif %}" data-vote="down" data-fullname="{{ comment.fullname }}" aria-label="Downvote">
+      ▼
+    </button>
+    <button class="comment__action" data-action="reply" data-fullname="{{ comment.fullname }}">Reply</button>
+    {% if comment.saved %}
+      <button class="comment__action" data-action="unsave" data-fullname="{{ comment.fullname }}">Unsave</button>
+    {% else %}
+      <button class="comment__action" data-action="save" data-fullname="{{ comment.fullname }}">Save</button>
+    {% endif %}
+  </div>
+
+  <!-- Nested replies -->
+  {% if !comment.replies.is_empty() %}
+    <div class="comment__replies">
+      {% for reply in comment.replies %}
+        {% with depth = comment.depth + 1 %}
+          {% include "components/comment.html" %}
+        {% endwith %}
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+
+<script>
+function toggleComment(btn) {
+  const comment = btn.closest('.comment');
+  comment.classList.toggle('comment--collapsed');
+  btn.textContent = comment.classList.contains('comment--collapsed') ? '[+]' : '[–]';
+}
+</script>

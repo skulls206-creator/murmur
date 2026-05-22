@@ -1,0 +1,97 @@
+<article class="post-card{% if post.stickied %} post-card--stickied{% endif %}{% if post.nsfw or post.over_18 %} post-card--nsfw{% endif %}" id="post-{{ post.id }}" data-fullname="{{ post.fullname }}">
+  <!-- Vote Column -->
+  <div class="post-card__votes">
+    <button class="vote-btn vote-btn--up{% if post.likes == true %} active{% endif %}" data-vote="up" data-fullname="{{ post.fullname }}" aria-label="Upvote">
+      ▲
+    </button>
+    <span class="vote-score{% if post.likes == true %} vote-score--upvoted{% elseif post.likes == false %} vote-score--downvoted{% endif %}" data-score="{{ post.score }}">
+      {{ post.score }}
+    </span>
+    <button class="vote-btn vote-btn--down{% if post.likes == false %} active{% endif %}" data-vote="down" data-fullname="{{ post.fullname }}" aria-label="Downvote">
+      ▼
+    </button>
+  </div>
+
+  <!-- Content -->
+  <div class="post-card__content">
+    <!-- Header -->
+    <div class="post-card__header">
+      <a href="/r/{{ post.subreddit }}" class="post-card__subreddit">r/{{ post.subreddit }}</a>
+      <span class="post-card__meta-sep" aria-hidden="true">·</span>
+      <span class="post-card__meta">
+        Posted by
+        <a href="/u/{{ post.author }}" class="post-card__author">u/{{ post.author }}</a>
+        <span class="post-card__meta-sep" aria-hidden="true">·</span>
+        <time datetime="{{ post.created_utc | timestamp_to_iso }}" title="{{ post.created_utc | timestamp_to_iso }}">
+          {{ post.created_utc | relative_time }}
+        </time>
+      </span>
+
+      {% if post.stickied %}
+        <span class="flair flair--mod">Pinned</span>
+      {% endif %}
+      {% if post.nsfw or post.over_18 %}
+        <span class="flair flair--nsfw">NSFW</span>
+      {% endif %}
+      {% if post.spoiler %}
+        <span class="flair flair--spoiler">Spoiler</span>
+      {% endif %}
+      {% if post.link_flair_text %}
+        <span class="flair" {% if post.link_flair_background_color %}style="background-color: {{ post.link_flair_background_color }}20; color: {{ post.link_flair_background_color }}"{% endif %}>
+          {{ post.link_flair_text }}
+        </span>
+      {% endif %}
+    </div>
+
+    <!-- Title -->
+    <h2 class="post-card__title">
+      <a href="/r/{{ post.subreddit }}/comments/{{ post.id }}">
+        {% if post.is_self %}<!-- self post -->{% endif %}
+        {{ post.title }}
+      </a>
+    </h2>
+
+    <!-- Thumbnail Preview -->
+    {% if post.thumbnail.is_some() && post.thumbnail.as_ref().unwrap() != "self" && post.thumbnail.as_ref().unwrap() != "default" && post.thumbnail.as_ref().unwrap() != "spoiler" && post.is_self == false %}
+      {% if view.as_str() == "compact" || view.as_str() == "classic" %}
+        <div class="post-card__thumbnail--small">
+          <img
+            src="/media/{{ post.thumbnail.as_ref().unwrap() | encode_media_url }}"
+            alt="" loading="lazy"
+            width="{{ post.thumbnail_width.unwrap_or(80) }}"
+            height="{{ post.thumbnail_height.unwrap_or(80) }}"
+          >
+        </div>
+      {% else %}
+        <div class="post-card__thumbnail">
+          <img
+            src="/media/{{ post.thumbnail.as_ref().unwrap() | encode_media_url }}"
+            alt="" loading="lazy"
+            width="{{ post.thumbnail_width.unwrap_or(640) }}"
+            height="{{ post.thumbnail_height.unwrap_or(360) }}"
+          >
+        </div>
+      {% endif %}
+    {% endif %}
+
+    <!-- Self Text Preview -->
+    {% if post.selftext.is_some() && !post.selftext.as_ref().unwrap().is_empty() %}
+      <div class="post-card__body">
+        {{ post.selftext_html.as_deref().unwrap_or("") | safe }}
+      </div>
+    {% endif %}
+
+    <!-- Footer -->
+    <div class="post-card__footer">
+      <a href="/r/{{ post.subreddit }}/comments/{{ post.id }}" class="post-card__action post-card__action--comments">
+        💬 {{ post.num_comments }} comments
+      </a>
+      <button class="post-card__action" data-action="save" data-fullname="{{ post.fullname }}">
+        {% if post.saved %}Unsave{% else %}Save{% endif %}
+      </button>
+      <span class="post-card__meta">
+        {{ post.domain.as_deref().unwrap_or("self.murmur") }}
+      </span>
+    </div>
+  </div>
+</article>
